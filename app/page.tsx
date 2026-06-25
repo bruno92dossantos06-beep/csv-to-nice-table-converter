@@ -16,7 +16,7 @@ export default function Home() {
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
-      delimiter: ";",
+      delimiter: ";", // Force la lecture des CSV type Numbers/Excel FR
       complete: (results: any) => {
         if (results.data && results.data.length > 0) {
           setHeaders(Object.keys(results.data[0]));
@@ -29,44 +29,49 @@ export default function Home() {
   const downloadExcel = () => {
     const ws = XLSX.utils.json_to_sheet(data);
     
-    // Ajout d'une largeur minimale aux colonnes pour un rendu pro
-    ws['!cols'] = headers.map(() => ({ wch: 20 }));
+    // Formatage professionnel des colonnes (largeur auto)
+    ws['!cols'] = headers.map(() => ({ wch: 25 }));
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Données");
     
-    // Génération du fichier avec une meilleure gestion des types
     XLSX.writeFile(wb, `${fileName.split('.')[0]}_export_pro.xlsx`);
   };
 
   return (
-    <main className="min-h-screen bg-slate-100 p-8">
-      <div className="max-w-6xl mx-auto">
-        <header className="mb-10">
-          <h1 className="text-3xl font-bold text-slate-800">DataConverter Pro</h1>
-          <p className="text-slate-600">Interface de conversion de données certifiée.</p>
+    <main className="min-h-screen bg-slate-50 py-12 px-6">
+      <div className="max-w-5xl mx-auto">
+        <header className="mb-12 text-center">
+          <h1 className="text-4xl font-extrabold text-slate-900 mb-3">DataConverter <span className="text-blue-600">Pro</span></h1>
+          <p className="text-slate-500 text-lg">Convertisseur CSV vers Excel haut de gamme.</p>
         </header>
 
-        <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-200 mb-8">
-          <input type="file" accept=".csv" onChange={handleFileUpload} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 mb-8">
+          <div className="flex flex-col items-center border-2 border-dashed border-slate-300 rounded-xl py-12 bg-slate-50">
+            <input type="file" accept=".csv" onChange={handleFileUpload} className="hidden" id="fileInput" />
+            <label htmlFor="fileInput" className="cursor-pointer bg-blue-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-blue-700 transition-all shadow-md">
+              Choisir un fichier CSV
+            </label>
+            <p className="text-slate-400 text-sm mt-4">{fileName || "Aucun fichier sélectionné"}</p>
+          </div>
         </div>
 
         {data.length > 0 && (
-          <div className="bg-white rounded-xl shadow-lg border border-slate-200">
-            <div className="p-5 border-b flex justify-between items-center">
-              <h2 className="font-semibold text-slate-700">Données extraites</h2>
-              <button onClick={downloadExcel} className="bg-slate-900 text-white px-6 py-2 rounded-lg hover:bg-slate-800 transition">
-                Exporter Excel (.xlsx)
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+              <h2 className="font-bold text-slate-800">Données extraites</h2>
+              <button onClick={downloadExcel} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-6 rounded-lg transition-all">
+                Télécharger Excel
               </button>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-slate-50">
-                  <tr>{headers.map(h => <th key={h} className="p-4 text-left font-bold text-slate-600 border-b">{h}</th>)}</tr>
+              <table className="w-full text-sm text-left">
+                <thead className="bg-slate-50 text-slate-600 uppercase font-bold text-[10px] tracking-widest">
+                  <tr>{headers.map(h => <th key={h} className="p-4">{h}</th>)}</tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-slate-100">
                   {data.slice(0, 15).map((row, i) => (
-                    <tr key={i} className="border-b last:border-0 hover:bg-slate-50">
+                    <tr key={i} className="hover:bg-slate-50/80">
                       {headers.map(h => <td key={h} className="p-4 text-slate-700">{row[h]}</td>)}
                     </tr>
                   ))}
