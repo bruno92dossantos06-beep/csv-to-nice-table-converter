@@ -9,9 +9,8 @@ export default function Home() {
   const [fileName, setFileName] = useState<string>('');
   const [loading, setLoading] = useState(false);
   
-  // Configuration Freemium : Limite fixée à 50 lignes
+  // Configuration : limite gratuite fixée à 50 lignes
   const MAX_FREE_ROWS = 50;
-  const [isPremium] = useState(false); // Sera true après intégration du paiement
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -69,17 +68,21 @@ export default function Home() {
           <div className="mt-12">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-semibold text-slate-800">
-                {data.length > MAX_FREE_ROWS && !isPremium 
-                  ? `Limite atteinte (${data.length} lignes)` 
+                {data.length > MAX_FREE_ROWS 
+                  ? `Limite atteinte (${data.length} lignes - Version Pro requise)` 
                   : `Prévisualisation (${data.length} lignes)`}
               </h3>
 
-              {data.length <= MAX_FREE_ROWS || isPremium ? (
+              {data.length <= MAX_FREE_ROWS ? (
                 <button onClick={downloadExcel} className="bg-emerald-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-emerald-700 transition-all shadow-lg">
                   Télécharger Excel (.xlsx)
                 </button>
               ) : (
-                <a href="#" className="bg-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-700 transition-all shadow-lg">
+                <a 
+                  href="https://dataconverterpro.lemonsqueezy.com/checkout/buy/ee7cef94-5a34-4e25-b752-dc8e3a9694a4"
+                  target="_blank"
+                  className="bg-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-700 transition-all shadow-lg"
+                >
                   Passer à Pro pour exporter
                 </a>
               )}
