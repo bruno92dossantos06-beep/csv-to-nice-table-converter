@@ -8,6 +8,10 @@ export default function Home() {
   const [headers, setHeaders] = useState<string[]>([]);
   const [fileName, setFileName] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  
+  // Configuration Freemium : Limite fixée à 50 lignes
+  const MAX_FREE_ROWS = 50;
+  const [isPremium] = useState(false); // Sera true après intégration du paiement
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -18,7 +22,7 @@ export default function Home() {
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
-      delimiter: ";", // Optimisé pour les exports Numbers/Excel FR
+      delimiter: ";",
       complete: (results: any) => {
         if (results.data && results.data.length > 0) {
           setHeaders(Object.keys(results.data[0]));
@@ -31,53 +35,54 @@ export default function Home() {
 
   const downloadExcel = () => {
     const ws = XLSX.utils.json_to_sheet(data);
-    
-    // Rendu professionnel : largeur automatique des colonnes
     ws['!cols'] = headers.map(() => ({ wch: 25 }));
-
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Données");
-    
-    // Nom de fichier personnalisé pour un look pro
     XLSX.writeFile(wb, `Export_${fileName.split('.')[0]}_Pro.xlsx`);
   };
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900 font-sans">
-      {/* Navigation */}
       <nav className="border-b bg-white">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
           <h1 className="text-xl font-bold tracking-tight">Data<span className="text-blue-600">Converter</span> Pro</h1>
-          <button className="text-sm font-medium text-slate-600 hover:text-blue-600 transition">Support</button>
         </div>
       </nav>
 
-      {/* Contenu principal */}
       <div className="max-w-4xl mx-auto px-6 py-16">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-extrabold mb-4 tracking-tight">Transformez vos fichiers en un clic.</h2>
-          <p className="text-lg text-slate-500">Une solution de conversion CSV vers Excel rapide, précise et prête pour vos besoins métier.</p>
+          <h2 className="text-4xl font-extrabold mb-4">Transformez vos fichiers CSV.</h2>
+          <p className="text-lg text-slate-500">Rapide, précis et professionnel.</p>
         </div>
 
-        {/* Zone d'importation */}
         <div className="bg-white p-2 rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100">
-          <div className="border-2 border-dashed border-slate-200 rounded-xl p-12 text-center bg-slate-50/50 hover:bg-slate-50 transition-colors">
+          <div className="border-2 border-dashed border-slate-200 rounded-xl p-12 text-center bg-slate-50/50">
             <input type="file" accept=".csv" onChange={handleFileUpload} className="hidden" id="fileInput" />
-            <label htmlFor="fileInput" className="cursor-pointer inline-flex items-center justify-center bg-blue-600 text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20">
-              {loading ? "Traitement en cours..." : "Importer un fichier CSV"}
+            <label htmlFor="fileInput" className="cursor-pointer inline-flex items-center justify-center bg-blue-600 text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-blue-700 transition-all shadow-lg">
+              {loading ? "Traitement..." : "Importer un fichier CSV"}
             </label>
-            <p className="mt-4 text-sm text-slate-400">{fileName || "Glissez-déposez ou cliquez pour importer"}</p>
+            <p className="mt-4 text-sm text-slate-400">{fileName || "Fichier .csv uniquement"}</p>
           </div>
         </div>
 
-        {/* Prévisualisation */}
         {data.length > 0 && (
-          <div className="mt-12 animate-in fade-in duration-700">
+          <div className="mt-12">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-semibold text-slate-800">Prévisualisation ({data.length} lignes)</h3>
-              <button onClick={downloadExcel} className="bg-emerald-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/20">
-                Télécharger en format Excel (.xlsx)
-              </button>
+              <h3 className="text-lg font-semibold text-slate-800">
+                {data.length > MAX_FREE_ROWS && !isPremium 
+                  ? `Limite atteinte (${data.length} lignes)` 
+                  : `Prévisualisation (${data.length} lignes)`}
+              </h3>
+
+              {data.length <= MAX_FREE_ROWS || isPremium ? (
+                <button onClick={downloadExcel} className="bg-emerald-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-emerald-700 transition-all shadow-lg">
+                  Télécharger Excel (.xlsx)
+                </button>
+              ) : (
+                <a href="#" className="bg-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-700 transition-all shadow-lg">
+                  Passer à Pro pour exporter
+                </a>
+              )}
             </div>
             
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -88,7 +93,7 @@ export default function Home() {
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {data.slice(0, 10).map((row, i) => (
-                      <tr key={i} className="hover:bg-slate-50 transition-colors">
+                      <tr key={i} className="hover:bg-slate-50">
                         {headers.map(h => <td key={h} className="p-4 text-slate-600">{row[h]}</td>)}
                       </tr>
                     ))}
