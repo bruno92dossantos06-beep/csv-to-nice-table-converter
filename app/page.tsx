@@ -6,80 +6,82 @@ import * as XLSX from 'xlsx';
 export default function Home() {
   const [data, setData] = useState<any[]>([]);
   const [headers, setHeaders] = useState<string[]>([]);
+  const [fileName, setFileName] = useState<string>('');
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (results) => {
-          if (results.data.length > 0) {
-            setHeaders(Object.keys(results.data[0] as object));
-            setData(results.data);
-          }
-        },
-      });
-    }
+    if (!file) return;
+
+    setFileName(file.name);
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      delimiter: ";",
+      complete: (results: any) => {
+        if (results.data && results.data.length > 0) {
+          setHeaders(Object.keys(results.data[0]));
+          setData(results.data);
+        }
+      },
+      error: (err: any) => {
+        console.error("Erreur :", err);
+      }
+    });
   };
 
-  // Fonction pour télécharger le fichier Excel
+  // Fonction de téléchargement Excel
   const downloadExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Donnees");
-    XLSX.writeFile(workbook, "DataConverter_Pro.xlsx");
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Données");
+    XLSX.writeFile(wb, "DataConverter_Export.xlsx");
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 py-16 px-4">
-      <div className="max-w-5xl mx-auto">
-        <header className="text-center mb-12">
-          <h1 className="text-5xl font-black text-slate-900 tracking-tight mb-4">
-            Data<span className="text-blue-600">Converter</span> Pro
-          </h1>
-          <p className="text-xl text-slate-500 font-medium">
-            Transformez vos fichiers CSV en tableaux et exportez-les en Excel.
-          </p>
-        </header>
-
-        <div className="bg-white p-10 rounded-3xl shadow-lg border border-slate-100 text-center mb-12">
-          <label className="block text-lg font-semibold text-slate-800 mb-6">
-            Sélectionnez votre fichier CSV
-          </label>
-          <input type="file" accept=".csv" onChange={handleFileUpload} className="block w-full max-w-sm mx-auto text-sm text-slate-500 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer transition-all" />
-        </div>
-        
-        {data.length > 0 && (
-          <div className="bg-white p-6 rounded-3xl shadow-lg border border-slate-100">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg font-bold text-slate-800">Prévisualisation</h2>
-              <button 
-                onClick={downloadExcel}
-                className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-xl transition-all"
-              >
-                Télécharger en Excel
-              </button>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b-2 border-slate-200">
-                    {headers.map(h => <th key={h} className="p-4 text-slate-800 font-bold uppercase text-xs tracking-widest">{h}</th>)}
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.map((row, i) => (
-                    <tr key={i} className="border-b border-slate-50 hover:bg-blue-50/50 transition-colors">
-                      {headers.map(h => <td key={h} className="p-4 text-slate-600 text-sm">{row[h]}</td>)}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+    <main className="p-10 font-sans">
+      <h1 className="text-2xl font-bold mb-4">DataConverter Pro</h1>
+      
+      <div className="border-2 border-dashed border-gray-300 p-6 rounded-lg text-center">
+        <input 
+          type="file" 
+          accept=".csv" 
+          onChange={handleFileUpload} 
+          className="block mx-auto" 
+        />
+        <p className="text-sm text-gray-500 mt-2">
+          {fileName ? `Fichier chargé : ${fileName}` : "Sélectionnez votre CSV"}
+        </p>
       </div>
+
+      {data.length > 0 && (
+        <div className="mt-8">
+          {/* Le Bouton de Téléchargement */}
+          <button 
+            onClick={downloadExcel}
+            className="mb-6 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all"
+          >
+            Télécharger en Excel (.xlsx)
+          </button>
+
+          <div className="overflow-x-auto border rounded-lg">
+            <table className="w-full text-xs text-left">
+              <thead className="bg-gray-100">
+                <tr>
+                  {headers.map((h) => <th key={h} className="p-3 border">{h}</th>)}
+                </tr>
+              </thead>
+              <tbody>
+                {data.map((row, i) => (
+                  <tr key={i} className="border-t">
+                    {headers.map((h) => <td key={h} className="p-3 border">{row[h]}</td>)}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
